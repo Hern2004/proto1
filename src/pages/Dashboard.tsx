@@ -1,4 +1,4 @@
-
+declare const process: any;
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { SectionHeading, Button } from '../components/UI';
