@@ -260,7 +260,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
              {verification?.dataDecayWarning && (
                  <div className="p-3 bg-orange-50 text-orange-700 text-sm rounded-lg flex items-center gap-2 mb-4">
                     <Timer size={16}/>
-                    <span>警告：部分数据源已陈旧（>6个月），可信度已自动降级。</span>
+                    <span>警告：部分数据源已陈旧（&gt;6个月），可信度已自动降级。</span>
                  </div>
              )}
 
