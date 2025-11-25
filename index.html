@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>ProtoEngine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              apple: {
+                bg: '#F5F5F7',
+                card: '#FFFFFF',
+                text: '#1D1D1F',
+                subtext: '#86868B',
+                blue: '#007AFF',
+                border: '#E5E5EA',
+              }
+            },
+            backdropBlur: {
+              xs: '2px',
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #F5F5F7;
+        color: #1D1D1F;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        /* Mobile Optimizations */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+      .glass {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* Print Styles for PDF Export */
+      @media print {
+        @page {
+          margin: 1.5cm;
+          size: A4;
+        }
+
+        /* 1. Reset Layout Structure for Linear Document Flow */
+        html, body {
+          height: auto !important;
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: visible !important;
+          background-color: white !important;
+          font-size: 11pt !important;
+        }
+
+        /* 2. Hide Interactive & Fixed Elements */
+        nav, button, header, .no-print, .fixed {
+          display: none !important;
+        }
+
+        /* 3. Main Content Container Reset */
+        #root, main {
+          display: block !important;
+          padding-top: 0 !important;
+          margin: 0 !important;
+          width: 100% !important;
+          max-width: none !important;
+        }
+
+        /* 4. Flatten Grids/Flex for Single Column Layout */
+        .grid, .flex {
+          display: block !important;
+        }
+        
+        /* Exception: Keep small inline flex items intact (like badges, stars) */
+        .flex.items-center, .flex.gap-2, .flex.gap-1 {
+          display: flex !important;
+          flex-wrap: wrap !important;
+        }
+        
+        /* 5. Component Styling for Print */
+        .glass-card, .glass {
+          background: white !important;
+          box-shadow: none !important;
+          border: 1px solid #ddd !important;
+          backdrop-filter: none !important;
+          margin-bottom: 24px !important;
+          border-radius: 8px !important;
+          padding: 16px !important;
+          color: black !important;
+          
+          /* Prevent cutting cards in half */
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+
+        /* 6. Text & Colors */
+        body {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color: #111 !important;
+        }
+        .text-white { color: black !important; }
+        .text-gray-400, .text-\[\#86868B\] { color: #555 !important; }
+        
+        /* Links */
+        a {
+          text-decoration: underline;
+          color: #007AFF !important;
+        }
+
+        /* 7. Specific Section Fixes */
+        h1 { font-size: 24pt !important; margin-bottom: 10px !important; }
+        h2 { font-size: 18pt !important; }
+        h3 { font-size: 14pt !important; border-bottom: 2px solid #eee !important; padding-bottom: 5px !important; }
+        
+        /* Remove large gaps */
+        .mb-10, .my-10, .gap-8 {
+          margin-bottom: 20px !important;
+          gap: 10px !important;
+        }
+
+        /* Ensure widths */
+        .w-full, .max-w-5xl, .col-span-2 {
+            width: 100% !important;
+            max-width: none !important;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^12.23.24",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>
