@@ -1,18 +1,25 @@
+
 import React, { useState } from 'react';
 import { Button, GlassCard } from '../components/UI';
-import { ArrowRight, ShieldCheck, Activity, FileText, Search } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Activity, FileText, Search, Video, CreditCard, Globe } from 'lucide-react';
 import { Logo } from '../components/Logo';
 import { HeroAnimation } from '../components/HeroAnimation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { translations } from '../i18n';
 
 interface LandingProps {
   onSearch: (query: string) => void;
   onDocs: () => void;
+  onVeo: () => void;
+  onPricing: () => void;
+  onToggleLang: () => void;
+  lang: 'zh' | 'en';
 }
 
-const Landing: React.FC<LandingProps> = ({ onSearch, onDocs }) => {
+const Landing: React.FC<LandingProps> = ({ onSearch, onDocs, onVeo, onPricing, onToggleLang, lang }) => {
   const [input, setInput] = useState('');
   const [introComplete, setIntroComplete] = useState(false);
+  const t = translations[lang].landing;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +42,7 @@ const Landing: React.FC<LandingProps> = ({ onSearch, onDocs }) => {
         animate={{ opacity: introComplete ? 1 : 0 }}
         transition={{ duration: 0.8 }}
       >
-        {/* Background Decor - Hidden on mobile to improve performance and prevent overflow */}
+        {/* Background Decor */}
         <div className="hidden md:block absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-400/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="hidden md:block absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-400/10 rounded-full blur-[100px] pointer-events-none" />
 
@@ -49,16 +56,15 @@ const Landing: React.FC<LandingProps> = ({ onSearch, onDocs }) => {
           <div className="space-y-4 md:space-y-6">
             <h1 className="text-4xl md:text-7xl font-semibold tracking-tighter text-[#1D1D1F] leading-[1.1]">
               ProtoEngine <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4285F4] to-[#8B5CF6]">Web3 投研引擎</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4285F4] to-[#8B5CF6]">{t.title_sub}</span>
             </h1>
             <p className="text-base md:text-xl text-[#86868B] font-light max-w-2xl mx-auto leading-relaxed px-4">
-              由协议驱动的Web3投研引擎<br className="hidden md:block"/>
-              验证真实性 · 对齐白皮书 · 识别深层风险
+              {t.subtitle}
             </p>
           </div>
 
           {/* Search Section */}
-          <div className="w-full max-w-lg mx-auto">
+          <div className="w-full max-w-lg mx-auto relative z-20 space-y-4">
             <form onSubmit={handleSubmit} className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Search className="text-gray-400 group-focus-within:text-blue-500 transition-colors" size={20} />
@@ -67,58 +73,68 @@ const Landing: React.FC<LandingProps> = ({ onSearch, onDocs }) => {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="输入项目名称 或 合约地址"
+                placeholder={t.search_placeholder}
                 className="w-full pl-12 pr-4 py-4 md:py-5 bg-white/80 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent text-base md:text-lg transition-all placeholder:text-gray-400"
               />
               <button 
                 type="submit"
                 className="absolute inset-y-2 right-2 bg-[#1D1D1F] hover:bg-black text-white px-4 md:px-6 rounded-xl font-medium transition-all active:scale-95 text-sm md:text-base"
               >
-                开始分析
+                {t.start_analysis}
               </button>
             </form>
-            <div className="mt-4 flex flex-wrap gap-3 md:gap-4 justify-center text-sm text-[#86868B]">
-              <span>热门搜索:</span>
+
+            <div className="flex flex-wrap gap-3 justify-center text-sm text-[#86868B]">
+              <span>{t.hot_search}:</span>
               <button onClick={() => onSearch('EtherLayer X')} className="hover:text-blue-600 underline decoration-dotted">EtherLayer X</button>
               <button onClick={() => onSearch('ZkSync')} className="hover:text-blue-600 underline decoration-dotted">ZkSync</button>
               <button onClick={() => onSearch('Arbitrum')} className="hover:text-blue-600 underline decoration-dotted">Arbitrum</button>
             </div>
           </div>
 
-          <div className="pt-4 md:pt-8">
+          <div className="pt-4 flex flex-wrap items-center justify-center gap-3 md:gap-4">
+            <Button variant="primary" onClick={onPricing} className="text-sm md:text-base bg-[#1D1D1F] text-white hover:scale-105 transition-transform">
+               <CreditCard size={18} /> {t.pricing_btn}
+            </Button>
+            <Button variant="secondary" onClick={onVeo} className="text-sm md:text-base">
+               <Video size={18} /> {t.veo_btn}
+            </Button>
+            <Button variant="ghost" onClick={onToggleLang} className="text-sm md:text-base bg-white/50 hover:bg-white border border-gray-200">
+               <Globe size={18} /> {lang === 'zh' ? 'Switch to English' : '切换中文'}
+            </Button>
             <Button variant="ghost" onClick={onDocs} className="text-sm md:text-base">
-              查看协议文档库 <ArrowRight size={16} className="ml-2"/>
+              {t.docs_btn} <ArrowRight size={16} className="ml-2"/>
             </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-12 md:mt-16 text-left">
-            <GlassCard className="space-y-3 p-6 md:p-8">
+            <GlassCard className="space-y-3 p-6">
               <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-[#007AFF]">
                 <FileText size={20} />
               </div>
-              <h3 className="text-lg font-semibold">协议驱动</h3>
+              <h3 className="text-lg font-semibold">{t.card_protocol_title}</h3>
               <p className="text-[#86868B] text-sm leading-relaxed">
-                基于信息采集协议 (V4.0) 和白皮书对齐协议 (WAP V3.0) 确保结构完整性。
+                {t.card_protocol_desc}
               </p>
             </GlassCard>
             
-            <GlassCard className="space-y-3 p-6 md:p-8">
+            <GlassCard className="space-y-3 p-6">
               <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
                 <ShieldCheck size={20} />
               </div>
-              <h3 className="text-lg font-semibold">风险识别</h3>
+              <h3 className="text-lg font-semibold">{t.card_risk_title}</h3>
               <p className="text-[#86868B] text-sm leading-relaxed">
-                通过多层验证协议 (V6.0) 和链上监控 (V3.0) 过滤噪音，直击风险本质。
+                {t.card_risk_desc}
               </p>
             </GlassCard>
 
-            <GlassCard className="space-y-3 p-6 md:p-8">
+            <GlassCard className="space-y-3 p-6">
               <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
                 <Activity size={20} />
               </div>
-              <h3 className="text-lg font-semibold">压力测试</h3>
+              <h3 className="text-lg font-semibold">{t.card_stress_title}</h3>
               <p className="text-[#86868B] text-sm leading-relaxed">
-                内置代币经济学 (V5.0) 和经济压力测试 (V3.0) 仿真引擎，预演极端行情。
+                {t.card_stress_desc}
               </p>
             </GlassCard>
           </div>
@@ -127,5 +143,4 @@ const Landing: React.FC<LandingProps> = ({ onSearch, onDocs }) => {
     </>
   );
 };
-
 export default Landing;

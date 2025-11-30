@@ -2,16 +2,19 @@
 import React, { useState } from 'react';
 import { GlassCard, Button, Badge } from '../components/UI';
 import { ResearchReport } from '../types';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { 
   Download, Share2, ShieldCheck, BrainCircuit, Activity, Lock, Globe, 
   TrendingUp, FileText, CheckCircle2, HelpCircle, AlertTriangle, XCircle,
   Layers, Scale, Fingerprint, Eye, Cpu, Zap, BarChart3, Link, Check, ExternalLink, Timer, Scale as ScaleIcon, 
-  Quote, Github, Star, Anchor, ArrowRight, Shield, Clock, Search
+  Quote, Github, Star, Anchor, ArrowRight, Shield, Clock, Search, Loader2
 } from 'lucide-react';
 
 interface ReportProps {
   query?: string;
   data: ResearchReport | null;
+  lang: 'zh' | 'en';
 }
 
 const ReportSection: React.FC<{ title: string; icon?: React.ReactNode; children: React.ReactNode, className?: string }> = ({ title, icon, children, className }) => (
@@ -24,13 +27,14 @@ const ReportSection: React.FC<{ title: string; icon?: React.ReactNode; children:
   </section>
 );
 
-const Report: React.FC<ReportProps> = ({ query, data }) => {
+const Report: React.FC<ReportProps> = ({ query, data, lang }) => {
   const [showChecks, setShowChecks] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
   if (!data) {
     return (
       <div className="flex items-center justify-center min-h-[50vh] text-[#86868B]">
-        未找到相关报告数据，请重新搜索。
+        No report data found. Please try searching again.
       </div>
     );
   }
@@ -50,11 +54,11 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
      return 'bg-red-600';
   };
   const getDeviationLabel = (grade: number) => {
-     if (grade === 0) return '无偏差 (Perfect)';
-     if (grade === 1) return '弱偏差 (Weak)';
-     if (grade === 2) return '中等偏差 (Medium)';
-     if (grade === 3) return '强偏差 (Strong)';
-     return '致命偏差 (Fatal)';
+     if (grade === 0) return 'Perfect Alignment';
+     if (grade === 1) return 'Weak Deviation';
+     if (grade === 2) return 'Medium Deviation';
+     if (grade === 3) return 'Strong Deviation';
+     return 'Fatal Deviation';
   };
 
   const getTransparencyColor = (score: number) => {
@@ -63,9 +67,9 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
       return 'text-blue-600 bg-blue-50';
   };
   const getTransparencyLabel = (score: number) => {
-      if (score > 85) return '高可靠 (High Reliability)';
-      if (score < 60) return '低可靠 (Low Reliability)';
-      return '中等可靠 (Medium)';
+      if (score > 85) return 'High Reliability';
+      if (score < 60) return 'Low Reliability';
+      return 'Medium Reliability';
   };
 
   const narrativeStages = ['N1 萌芽期', 'N2 早期扩散', 'N3 主流叙事', 'N4 狂热期', 'N5 疲弱期', 'N6 破裂期'];
@@ -92,18 +96,60 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
     return <span>{source}</span>;
   };
 
+  const handleDownloadPDF = async () => {
+    setIsGeneratingPDF(true);
+    const element = document.getElementById('report-container');
+    
+    if (!element) {
+        setIsGeneratingPDF(false);
+        return;
+    }
+
+    try {
+        // Use html2canvas to capture the DOM
+        const canvas = await html2canvas(element, {
+            scale: 2, // Increase scale for better resolution
+            useCORS: true, // Enable CORS for external images
+            backgroundColor: '#F5F5F7', // Match background color
+            logging: false,
+            allowTaint: true,
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        
+        // Create PDF with custom size matching the canvas dimensions (Single long page)
+        // This prevents awkward page breaks in the middle of glass cards
+        const pdf = new jsPDF({
+            orientation: 'p',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+        });
+
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        
+        const fileName = `${name || 'Project'}_Deep_Research_Report.pdf`;
+        pdf.save(fileName);
+
+    } catch (error) {
+        console.error('PDF Generation failed:', error);
+        alert('PDF Generation Failed.');
+    } finally {
+        setIsGeneratingPDF(false);
+    }
+  };
+
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12 pb-24 print:py-0 print:px-0 print:max-w-none">
+    <div id="report-container" className="max-w-5xl mx-auto px-6 py-12 pb-24 print:py-0 print:px-0 print:max-w-none bg-[#F5F5F7]">
       {/* Header Area */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 border-b border-[#E5E5EA] pb-8 gap-4 print:mb-6 print:pb-4 print:block">
         <div>
           <div className="flex items-center gap-2 mb-2 print:mb-1">
-            <Badge color="blue">最终输出协议 V3.0</Badge>
+            <Badge color="blue">Output Protocol V3.0</Badge>
             <span className="text-xs font-mono text-[#86868B]">{meta?.timestamp ? new Date(meta.timestamp).toLocaleDateString() : new Date().toLocaleDateString()}</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#1D1D1F] tracking-tight mb-2 print:text-2xl">深度投研报告</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-[#1D1D1F] tracking-tight mb-2 print:text-2xl">Deep Research Report</h1>
           <p className="text-lg text-[#86868B] font-light print:text-sm">
-            目标标的: <span className="font-medium text-[#1D1D1F]">{name || "Unknown"} ({ticker || "?"})</span>
+            Target: <span className="font-medium text-[#1D1D1F]">{name || "Unknown"} ({ticker || "?"})</span>
           </p>
           {/* One Sentence Thesis (V7.0) */}
           {oneSentenceThesis && (
@@ -113,9 +159,19 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
             </div>
           )}
         </div>
-        <div className="flex gap-3 no-print">
+        <div className="flex gap-3 no-print" data-html2canvas-ignore>
           <Button variant="secondary" className="h-10 px-5"><Share2 size={18}/></Button>
-          <Button className="h-10 px-5" onClick={() => window.print()}><Download size={18} className="mr-2"/> 导出 PDF</Button>
+          <Button 
+            className="h-10 px-5 min-w-[140px]" 
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPDF}
+          >
+            {isGeneratingPDF ? (
+                <><Loader2 size={18} className="mr-2 animate-spin"/> Generating...</>
+            ) : (
+                <><Download size={18} className="mr-2"/> Download PDF</>
+            )}
+          </Button>
         </div>
       </div>
 
@@ -126,7 +182,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
              <Eye size={20}/>
           </div>
           <div>
-            <div className="text-xs text-[#86868B] uppercase tracking-wide">透明度评分</div>
+            <div className="text-xs text-[#86868B] uppercase tracking-wide">Transparency Score</div>
             <div className={`font-bold ${getTransparencyColor(meta?.transparencyScore || 0).split(' ')[0]}`}>
                {meta?.transparencyScore || 0}/100 
                <span className="text-[10px] ml-1 font-normal opacity-80">{getTransparencyLabel(meta?.transparencyScore || 0)}</span>
@@ -137,8 +193,8 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
         <GlassCard className="p-4 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors relative group print:block print:cursor-default" onClick={() => setShowChecks(!showChecks)}>
           <div className="p-2 bg-green-50 rounded-full text-green-600 print:hidden"><CheckCircle2 size={20}/></div>
           <div className="flex-1">
-            <div className="text-xs text-[#86868B] uppercase tracking-wide flex items-center gap-1">一致性检查 <ChevronDownIcon size={12}/></div>
-            <div className="font-bold text-[#1D1D1F] text-sm truncate">点击查看详细对比</div>
+            <div className="text-xs text-[#86868B] uppercase tracking-wide flex items-center gap-1">Consistency Check <ChevronDownIcon size={12}/></div>
+            <div className="font-bold text-[#1D1D1F] text-sm truncate">View Details</div>
           </div>
           {/* Detailed Consistency Dropdown - Always show on print if data exists */}
           {((showChecks || false) || typeof window !== 'undefined' && window.matchMedia('print').matches) && meta?.consistencyChecks && (
@@ -159,8 +215,8 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
         <GlassCard className="p-4 flex items-center gap-3 print:border-gray-200">
           <div className="p-2 bg-purple-50 rounded-full text-purple-600 print:hidden"><Layers size={20}/></div>
           <div>
-            <div className="text-xs text-[#86868B] uppercase tracking-wide">数据源</div>
-            <div className="font-bold text-[#1D1D1F] text-sm">{(meta?.dataSources || []).length} 个独立源 (T1-T3)</div>
+            <div className="text-xs text-[#86868B] uppercase tracking-wide">Data Sources</div>
+            <div className="font-bold text-[#1D1D1F] text-sm">{(meta?.dataSources || []).length} Sources (T1-T3)</div>
           </div>
         </GlassCard>
       </div>
@@ -170,20 +226,20 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
         <div className="flex items-center justify-between mb-4">
            <div className="flex items-center gap-2">
               <ShieldCheck size={18} className="text-[#007AFF] print:hidden"/>
-              <h4 className="text-sm font-semibold text-[#86868B] uppercase tracking-wide">身份锁定 (Collection V4.0)</h4>
+              <h4 className="text-sm font-semibold text-[#86868B] uppercase tracking-wide">Identity Lock (Collection V4.0)</h4>
            </div>
            <div className="flex items-center gap-2">
               {collection?.lockMethod && (
                   <span className="text-xs text-[#86868B] bg-gray-50 px-2 py-1 rounded border border-gray-100 print:border-gray-300">
-                      锁定依据: {collection.lockMethod}
+                      Method: {collection.lockMethod}
                   </span>
               )}
               {collection?.identityLock === 'Verified' ? (
-                  <Badge color="green">✅ 身份已锁定 (Verified)</Badge>
+                  <Badge color="green">✅ Verified</Badge>
               ) : collection?.identityLock === 'Conflict' ? (
-                  <Badge color="red">⚠️ 身份冲突 (Conflict)</Badge>
+                  <Badge color="red">⚠️ Conflict</Badge>
               ) : (
-                  <Badge color="yellow">⏳ 待验证 (Pending)</Badge>
+                  <Badge color="yellow">⏳ Pending</Badge>
               )}
            </div>
         </div>
@@ -192,7 +248,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
             <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg flex gap-2 items-center print:border-red-200">
                 <AlertTriangle size={16} className="text-red-500 print:hidden" />
                 <span className="text-sm text-red-700 font-medium">
-                    辅助验证警告: {(collection.secondaryCheck.flags || []).join(', ')}
+                    Secondary Check Warning: {(collection.secondaryCheck.flags || []).join(', ')}
                 </span>
             </div>
         )}
@@ -207,7 +263,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
                         {link.url}
                     </a>
                   ) : (
-                    <div className="text-sm font-medium text-gray-400 italic">未找到</div>
+                    <div className="text-sm font-medium text-gray-400 italic">Not Found</div>
                   )}
                 </div>
                 {link.status === 'Verified' && <CheckCircle2 size={14} className="text-green-500 print:hidden"/>}
@@ -230,29 +286,29 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:block">
         <div className="lg:col-span-2 space-y-12 print:space-y-6">
           
-          <ReportSection title="信息验证与评级 (V6.0)" icon={<ShieldCheck size={20}/>}>
+          <ReportSection title="Verification & Tiering (V6.0)" icon={<ShieldCheck size={20}/>}>
              <div className="flex items-center gap-6 mb-6">
                 <div className={`text-4xl font-bold ${verification?.trustTier === 'R5' || verification?.trustTier === 'R4' ? 'text-green-600' : 'text-red-600'}`}>
                     {verification?.trustTier || "N/A"}
                 </div>
                 <div className="h-10 w-[1px] bg-gray-200"></div>
                 <div className="text-sm text-[#515154]">
-                   <div>可信度评分: <span className="font-semibold">{verification?.trustScore || 0}/100</span></div>
+                   <div>Trust Score: <span className="font-semibold">{verification?.trustScore || 0}/100</span></div>
                    <div className="text-[#86868B] text-xs mt-1">{verification?.verdict}</div>
                 </div>
              </div>
              
              <div className="grid grid-cols-3 gap-4 mb-6 print:block print:space-y-2">
                  <div className={`p-3 rounded-xl border ${verification?.modules?.contractAuthenticity === 'Verified' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                    <div className="text-xs text-[#86868B] mb-1">合约验证</div>
+                    <div className="text-xs text-[#86868B] mb-1">Contract</div>
                     <div className="font-semibold text-sm">{verification?.modules?.contractAuthenticity || 'Unknown'}</div>
                  </div>
                  <div className={`p-3 rounded-xl border ${verification?.modules?.liquiditySafety === 'Locked' ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
-                    <div className="text-xs text-[#86868B] mb-1">流动性安全</div>
+                    <div className="text-xs text-[#86868B] mb-1">Liquidity</div>
                     <div className="font-semibold text-sm">{verification?.modules?.liquiditySafety || 'Unknown'}</div>
                  </div>
                  <div className={`p-3 rounded-xl border ${verification?.modules?.teamIdentity === 'Public' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
-                    <div className="text-xs text-[#86868B] mb-1">团队身份</div>
+                    <div className="text-xs text-[#86868B] mb-1">Team</div>
                     <div className="font-semibold text-sm">{verification?.modules?.teamIdentity || 'Unknown'}</div>
                  </div>
              </div>
@@ -260,7 +316,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
              {verification?.dataDecayWarning && (
                  <div className="p-3 bg-orange-50 text-orange-700 text-sm rounded-lg flex items-center gap-2 mb-4">
                     <Timer size={16}/>
-                    <span>警告：部分数据源已陈旧（&gt;6个月），可信度已自动降级。</span>
+                    <span>Warning: Some data sources are old (>6 months). Trust score decayed.</span>
                  </div>
              )}
 
@@ -275,7 +331,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
              
              {verification?.conflicts && verification.conflicts.length > 0 && (
                 <div className="space-y-2 mt-4">
-                   <h5 className="text-xs font-semibold text-[#86868B] uppercase">冲突裁决日志 (MCRM)</h5>
+                   <h5 className="text-xs font-semibold text-[#86868B] uppercase">Conflict Resolution Log (MCRM)</h5>
                    {verification.conflicts.map((conf, i) => (
                       <div key={i} className="text-sm bg-red-50 p-3 rounded-lg border border-red-100 print:bg-white print:border-red-200">
                          <div className="font-medium text-red-800 flex items-center gap-2"><ScaleIcon size={14}/> {conf.dataPoint}</div>
@@ -284,7 +340,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
                             <div><span className="text-red-500">Source B:</span> {conf.source2}</div>
                          </div>
                          <div className="mt-2 pt-2 border-t border-red-100 text-red-700 font-medium text-xs">
-                            裁决: {conf.resolution}
+                            Resolution: {conf.resolution}
                          </div>
                       </div>
                    ))}
@@ -292,7 +348,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
              )}
           </ReportSection>
 
-          <ReportSection title="技术实现能力 (Tech V3.0)" icon={<Cpu size={20}/>}>
+          <ReportSection title="Tech Feasibility (Tech V3.0)" icon={<Cpu size={20}/>}>
              <div className="flex items-start gap-6 print:block">
                 <div className="text-center shrink-0 mb-4 print:text-left">
                     <div className="text-3xl font-bold mb-1">{techFeasibility?.score || 0}</div>
@@ -307,7 +363,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
                         <div className="p-3 bg-red-100 text-red-800 border border-red-200 rounded-lg flex items-start gap-3">
                             <AlertTriangle size={18} className="mt-0.5 shrink-0" />
                             <div>
-                                <div className="font-bold text-sm">CRITICAL: 疑似伪造代码库</div>
+                                <div className="font-bold text-sm">CRITICAL: Suspicious Codebase</div>
                                 <div className="text-xs mt-1">{techFeasibility.githubAudit.fakeReason}</div>
                             </div>
                         </div>
@@ -346,7 +402,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
              </div>
           </ReportSection>
 
-          <ReportSection title="代币经济与需求 (TIP V5.0)" icon={<Zap size={20}/>}>
+          <ReportSection title="Tokenomics (TIP V5.0)" icon={<Zap size={20}/>}>
              <div className="flex items-center justify-between mb-4">
                  <div className="flex items-center gap-2">
                     <span className="text-2xl font-bold">{tokenomics?.score}/100</span>
@@ -366,7 +422,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
                  <div className="mb-4 p-3 bg-orange-50 border border-orange-100 rounded-lg flex gap-3 items-center">
                     <Clock size={16} className="text-orange-600 shrink-0"/>
                     <div>
-                        <div className="text-xs font-bold text-orange-800 uppercase">解锁悬崖警告 (Cliff Detected)</div>
+                        <div className="text-xs font-bold text-orange-800 uppercase">Unlock Cliff Warning</div>
                         <div className="text-xs text-orange-700">{tokenomics.unlockCliff.note}</div>
                     </div>
                  </div>
@@ -376,11 +432,11 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
              {tokenomics?.reflexivity && (
                  <div className="mb-4 p-3 rounded-xl border bg-gray-50 border-gray-100 flex items-center justify-between print:bg-white print:border-gray-200">
                      <div>
-                        <div className="text-xs text-[#86868B]">反身性类型 (Reflexivity)</div>
+                        <div className="text-xs text-[#86868B]">Reflexivity Type</div>
                         <div className="font-semibold text-sm">{tokenomics.reflexivity.type}</div>
                      </div>
                      <div className="text-right">
-                        <div className="text-xs text-[#86868B]">死亡螺旋风险</div>
+                        <div className="text-xs text-[#86868B]">Death Spiral Risk</div>
                         <div className={`font-semibold text-sm ${tokenomics.reflexivity.deathSpiralRisk === 'Critical' ? 'text-red-600' : 'text-gray-700'}`}>
                             {tokenomics.reflexivity.deathSpiralRisk}
                         </div>
@@ -397,25 +453,25 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
           
           {/* Market Structure Protocol (V7.0) */}
           {marketStructure && (
-              <ReportSection title="市场结构分析 (MSP V7.0)" icon={<BarChart3 size={20}/>}>
+              <ReportSection title="Market Structure (MSP V7.0)" icon={<BarChart3 size={20}/>}>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 print:block print:space-y-2">
                       <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                          <div className="text-xs text-[#86868B] mb-1">VC 成本基准</div>
+                          <div className="text-xs text-[#86868B] mb-1">VC Cost Basis</div>
                           <div className="font-semibold text-sm">{marketStructure.vcCostBasis}</div>
                       </div>
                       <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                          <div className="text-xs text-[#86868B] mb-1">流动性状态</div>
+                          <div className="text-xs text-[#86868B] mb-1">Liquidity</div>
                           <div className="font-semibold text-sm">{marketStructure.liquidityStatus}</div>
                       </div>
                       <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                          <div className="text-xs text-[#86868B] mb-1">筹码结构</div>
+                          <div className="text-xs text-[#86868B] mb-1">Structure</div>
                           <div className="font-semibold text-sm">{marketStructure.holderStructure}</div>
                       </div>
                   </div>
               </ReportSection>
           )}
 
-          <ReportSection title="链上行为监控 (Monitor V3.0)" icon={<Activity size={20}/>}>
+          <ReportSection title="On-chain Monitoring (Monitor V3.0)" icon={<Activity size={20}/>}>
              <p className="text-sm text-[#515154] mb-4">{onchain?.details}</p>
              
              {onchain?.fundsFlow && (
@@ -451,7 +507,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
              </div>
           </ReportSection>
 
-          <ReportSection title="白皮书对齐 (WAP V3.0)" icon={<Scale size={20}/>}>
+          <ReportSection title="Whitepaper Alignment (WAP V3.0)" icon={<Scale size={20}/>}>
              <div className="flex items-center gap-4 mb-4">
                  <div className={`h-2 flex-1 rounded-full overflow-hidden bg-gray-100 print:hidden`}>
                      <div className={`h-full ${getDeviationColor(alignment?.deviationGrade || 0)}`} style={{ width: `${100 - (alignment?.deviationGrade || 0) * 20}%` }}></div>
@@ -465,9 +521,9 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-[#86868B] print:bg-white">
                         <tr>
-                            <th className="px-4 py-2 font-medium">承诺 (Claim)</th>
-                            <th className="px-4 py-2 font-medium">现实 (Reality)</th>
-                            <th className="px-4 py-2 font-medium w-24">状态</th>
+                            <th className="px-4 py-2 font-medium">Claim</th>
+                            <th className="px-4 py-2 font-medium">Reality</th>
+                            <th className="px-4 py-2 font-medium w-24">Status</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-[#E5E5EA] print:divide-gray-200">
@@ -494,7 +550,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
           <GlassCard className="p-6 bg-gradient-to-b from-white to-gray-50/50 print:bg-white print:border-gray-300">
              <div className="flex items-center justify-between mb-4">
                 <div>
-                   <div className="text-sm text-[#86868B] uppercase tracking-wide mb-1">总评分 (Score V3.0)</div>
+                   <div className="text-sm text-[#86868B] uppercase tracking-wide mb-1">Total Score (V3.0)</div>
                    <div className="text-5xl font-bold text-[#1D1D1F] tracking-tighter">{executiveSummary?.totalScore}</div>
                 </div>
                 <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-bold text-white shadow-lg ${
@@ -509,7 +565,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
              
              {executiveSummary?.antiFragilityScore !== undefined && executiveSummary.antiFragilityScore > 0 && (
                  <div className="p-2 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700 font-medium mb-4 flex justify-between">
-                    <span>🛡️ 反脆弱加分 (Anti-Fragility)</span>
+                    <span>🛡️ Anti-Fragility Bonus</span>
                     <span>+{executiveSummary.antiFragilityScore}</span>
                  </div>
              )}
@@ -532,7 +588,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
           {/* Narrative Cycle (V7.0) */}
           <GlassCard className="p-6 relative overflow-hidden print:bg-white print:border-gray-200">
               <div className="absolute top-0 right-0 p-4 opacity-10 print:hidden"><TrendingUp size={80}/></div>
-              <h4 className="text-sm font-semibold text-[#86868B] uppercase tracking-wide mb-4">叙事周期 (NCP V7.0)</h4>
+              <h4 className="text-sm font-semibold text-[#86868B] uppercase tracking-wide mb-4">Narrative Cycle (NCP V7.0)</h4>
               
               <div className="mb-4">
                   <div className="flex justify-between text-[10px] text-gray-400 mb-1 font-mono uppercase">
@@ -552,15 +608,15 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
 
               <div className="space-y-3 text-sm">
                   <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="text-[#86868B]">热度评分</span>
+                      <span className="text-[#86868B]">Heat Score</span>
                       <span className="font-mono font-bold">{narrative?.heatScore}/100</span>
                   </div>
                   <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="text-[#86868B]">市场位置</span>
+                      <span className="text-[#86868B]">Position</span>
                       <span className="text-right">{narrative?.position}</span>
                   </div>
                   <div className="pt-1">
-                      <span className="text-[#86868B] block mb-1">策略建议 (Strategy)</span>
+                      <span className="text-[#86868B] block mb-1">Strategy</span>
                       <span className="font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100">{narrative?.strategy}</span>
                   </div>
               </div>
@@ -569,14 +625,14 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
           {/* Risk Assessment (V6.0) */}
           <div className="space-y-4">
              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-[#86868B] uppercase tracking-wide">风险五维模型 (Risk V6.0)</h4>
+                <h4 className="text-sm font-semibold text-[#86868B] uppercase tracking-wide">Risk 5-Pillars (Risk V6.0)</h4>
                 <Badge color={riskAssessment?.tier === 'Tier 1' ? 'green' : riskAssessment?.tier === 'Tier 4' ? 'red' : 'yellow'}>
                     {riskAssessment?.tier}
                 </Badge>
              </div>
              
              <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100 shadow-sm print:border-gray-300 print:shadow-none">
-                 <span className="text-xs text-[#86868B]">未来 30 天风险趋势</span>
+                 <span className="text-xs text-[#86868B]">30-Day Trend</span>
                  <div className="flex items-center gap-1 font-medium text-sm">
                      {riskAssessment?.riskTrend === 'Increasing' && <TrendingUp size={16} className="text-red-500"/>}
                      {riskAssessment?.riskTrend === 'Decreasing' && <TrendingUp size={16} className="text-green-500 rotate-180"/>}
@@ -589,7 +645,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
              {riskAssessment?.mitigations && riskAssessment.mitigations.length > 0 && (
                  <div className="p-3 bg-green-50 border border-green-100 rounded-lg print:bg-white print:border-green-200">
                     <div className="text-xs font-bold text-green-800 flex items-center gap-1 mb-1">
-                        <Shield size={12}/> 风险缓和因子 (Mitigation)
+                        <Shield size={12}/> Mitigation Factors
                     </div>
                     <ul className="text-xs text-green-700 list-disc pl-4 space-y-0.5">
                         {riskAssessment.mitigations.map((m, i) => (
@@ -601,12 +657,12 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
 
              {riskAssessment?.adversarialCheck && (
                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 print:bg-white">
-                     <div className="font-bold flex items-center gap-1 mb-1"><AlertTriangle size={12}/> 对抗性检测警报 (Adversarial)</div>
+                     <div className="font-bold flex items-center gap-1 mb-1"><AlertTriangle size={12}/> Adversarial Alert</div>
                      {riskAssessment.adversarialCheck.isForged && (
-                        <div className="mb-1">• 伪造检测: <span className="font-medium">{riskAssessment.adversarialCheck.details}</span></div>
+                        <div className="mb-1">• Forgery: <span className="font-medium">{riskAssessment.adversarialCheck.details}</span></div>
                      )}
                      {riskAssessment.adversarialCheck.behaviorPattern && (
-                        <div>• 行为指纹 (Behavior Fingerprint): <span className="font-medium italic">{riskAssessment.adversarialCheck.behaviorPattern}</span></div>
+                        <div>• Behavior Fingerprint: <span className="font-medium italic">{riskAssessment.adversarialCheck.behaviorPattern}</span></div>
                      )}
                  </div>
              )}
@@ -633,34 +689,34 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
           {/* Stress Test (V3.0) */}
           <GlassCard className="p-6 border-red-100/50 bg-red-50/10 print:bg-white print:border-red-200">
               <h4 className="text-sm font-semibold text-[#86868B] uppercase tracking-wide mb-4 flex items-center gap-2">
-                 <Activity size={16}/> 经济压力测试
+                 <Activity size={16}/> Economic Stress Test
               </h4>
               
               {deathSpiralProbValue > 40 && (
                   <div className="mb-4 p-3 bg-red-600 text-white rounded-lg animate-pulse shadow-lg text-center font-bold text-sm print:bg-red-100 print:text-red-700 print:border-red-200 print:animate-none">
-                      🚨 CRITICAL ALERT: 死亡螺旋概率高 ({deathSpiralProbValue}%)
+                      🚨 CRITICAL ALERT: Death Spiral Risk High ({deathSpiralProbValue}%)
                   </div>
               )}
 
               <div className="grid grid-cols-2 gap-4 text-center mb-4">
                  <div className="p-2 bg-white rounded-lg border border-gray-100">
                     <div className="text-2xl font-bold text-[#1D1D1F]">{stressTest?.survivalProb}</div>
-                    <div className="text-xs text-[#86868B]">存活概率 (S3)</div>
+                    <div className="text-xs text-[#86868B]">Survival Prob (S3)</div>
                  </div>
                  <div className="p-2 bg-white rounded-lg border border-gray-100">
                     <div className="text-2xl font-bold text-red-600">{stressTest?.deathSpiralProb}</div>
-                    <div className="text-xs text-[#86868B]">死亡螺旋概率</div>
+                    <div className="text-xs text-[#86868B]">Death Spiral Prob</div>
                  </div>
               </div>
               <div className="text-xs text-[#515154] space-y-1 mb-3">
-                  <div><span className="font-semibold">测试场景:</span> {stressTest?.scenario}</div>
-                  <div><span className="font-semibold">关键脆弱参数:</span> {stressTest?.criticalParam}</div>
+                  <div><span className="font-semibold">Scenario:</span> {stressTest?.scenario}</div>
+                  <div><span className="font-semibold">Critical Param:</span> {stressTest?.criticalParam}</div>
               </div>
               
               {/* Time-to-Failure V3.0 */}
               {stressTest?.timeToFailure && (
                  <div className="bg-white p-2 rounded-lg border border-red-100/50 print:border-gray-200">
-                    <div className="text-[10px] text-[#86868B] uppercase font-bold mb-1 flex items-center gap-1"><Clock size={10}/> 崩溃时间分布 (Time-to-Failure)</div>
+                    <div className="text-[10px] text-[#86868B] uppercase font-bold mb-1 flex items-center gap-1"><Clock size={10}/> Time-to-Failure Dist</div>
                     <div className="grid grid-cols-3 gap-1 text-center text-xs">
                         <div>
                             <span className="block text-gray-400 text-[10px]">P10</span>
@@ -681,7 +737,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
 
           {/* Valuation (V7.0) */}
           <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-[#86868B] uppercase tracking-wide">场景化估值 (SVP V7.0)</h4>
+              <h4 className="text-sm font-semibold text-[#86868B] uppercase tracking-wide">Scenario Valuation (SVP V7.0)</h4>
               <div className="text-xs grid grid-cols-3 gap-2">
                   <div className="p-2 bg-red-50 border border-red-100 rounded text-center print:bg-white print:border-gray-200">
                       <div className="font-bold text-red-700">Bear</div>
@@ -704,12 +760,12 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
       {/* Evidence Chain */}
       <div className="mt-12 pt-8 border-t border-[#E5E5EA] print:mt-6 print:pt-4">
           <h4 className="text-sm font-semibold text-[#86868B] uppercase tracking-wide mb-4 flex items-center gap-2">
-             <BrainCircuit size={16}/> AI 解释性证据链
+             <BrainCircuit size={16}/> AI Explainability & Evidence
           </h4>
           <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 text-sm font-mono text-[#515154] space-y-2 print:bg-white print:border-gray-300">
-              <p className="font-semibold mb-2">逻辑路径 (Reasoning Path):</p>
+              <p className="font-semibold mb-2">Reasoning Path:</p>
               <p className="mb-4 leading-relaxed">{aiExplainability?.logicPath}</p>
-              <p className="font-semibold mb-2">关键证据 (Evidence):</p>
+              <p className="font-semibold mb-2">Key Evidence:</p>
               <ul className="list-disc pl-5 space-y-1">
                   {aiExplainability?.evidenceChain?.map((e, i) => (
                       <li key={i}>{e}</li>
@@ -717,7 +773,7 @@ const Report: React.FC<ReportProps> = ({ query, data }) => {
               </ul>
               
               <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="font-semibold mb-2">数据来源 (Data Sources):</p>
+                  <p className="font-semibold mb-2">Data Sources:</p>
                   <div className="flex flex-wrap gap-2">
                       {(meta?.dataSources || []).map((source, i) => (
                           <span key={i} className="px-2 py-1 bg-white border border-gray-200 rounded text-xs flex items-center gap-1 print:border-gray-300">

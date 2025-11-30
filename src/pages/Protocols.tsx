@@ -4,7 +4,11 @@ import { protocolsData } from '../data/protocols';
 import { GlassCard, SectionHeading, Badge } from '../components/UI';
 import { ChevronDown, ChevronUp, BookOpen, FileText } from 'lucide-react';
 
-const Protocols: React.FC = () => {
+interface ProtocolsProps {
+    lang?: 'zh' | 'en';
+}
+
+const Protocols: React.FC<ProtocolsProps> = ({ lang = 'zh' }) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showFullText, setShowFullText] = useState<{ [key: string]: boolean }>({});
 
@@ -30,11 +34,11 @@ const Protocols: React.FC = () => {
   // Translate categories for display
   const translateCategory = (cat: string) => {
     switch (cat) {
-      case 'Collection': return '采集类';
-      case 'Verification': return '验证类';
-      case 'Risk': return '风控类';
-      case 'Analysis': return '分析类';
-      case 'Output': return '输出类';
+      case 'Collection': return '采集类 (Collection)';
+      case 'Verification': return '验证类 (Verification)';
+      case 'Risk': return '风控类 (Risk)';
+      case 'Analysis': return '分析类 (Analysis)';
+      case 'Output': return '输出类 (Output)';
       default: return cat;
     }
   };
@@ -42,8 +46,8 @@ const Protocols: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">
       <SectionHeading 
-        title="协议标准文档库" 
-        subtitle="驱动 Aura Research 引擎的 12 套核心方法论与执行标准。"
+        title="Protocol Standard Library" 
+        subtitle="12 core methodologies driving the Aura Research Engine."
       />
 
       <div className="grid gap-6">
@@ -75,13 +79,13 @@ const Protocols: React.FC = () => {
               <div className="mt-6 pt-6 border-t border-[#E5E5EA] animate-fade-in">
                 <div className="flex items-center justify-between mb-4">
                     <h4 className="text-sm font-semibold uppercase tracking-wider text-[#86868B] flex items-center gap-2">
-                      <BookOpen size={14} /> 核心摘要
+                      <BookOpen size={14} /> Core Abstract
                     </h4>
                     <button 
                       onClick={(e) => toggleFullText(e, protocol.id)}
                       className="text-xs text-[#007AFF] flex items-center gap-1 hover:underline"
                     >
-                      <FileText size={12} /> {showFullText[protocol.id] ? '收起完整协议' : '查看完整协议文本'}
+                      <FileText size={12} /> {showFullText[protocol.id] ? 'Collapse' : 'View Full Text'}
                     </button>
                 </div>
                 

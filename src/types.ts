@@ -235,4 +235,6 @@ export enum ViewState {
   Dashboard = 'DASHBOARD',
   Protocols = 'PROTOCOLS',
   Report = 'REPORT',
+  Veo = 'VEO',
+  Pricing = 'PRICING',
 }

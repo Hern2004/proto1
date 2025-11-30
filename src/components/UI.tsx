@@ -10,8 +10,10 @@ export const GlassCard: React.FC<{ children: React.ReactNode; className?: string
   </div>
 );
 
-export const Button: React.FC<{ children: React.ReactNode; variant?: 'primary' | 'secondary' | 'ghost'; className?: string; onClick?: () => void }> = ({ children, variant = 'primary', className = '', onClick }) => {
-  const baseStyle = "px-6 py-3 rounded-full font-medium transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 min-h-[44px]";
+export const Button: React.FC<{ children: React.ReactNode; variant?: 'primary' | 'secondary' | 'ghost'; className?: string; onClick?: () => void; disabled?: boolean }> = ({ children, variant = 'primary', className = '', onClick, disabled }) => {
+  const baseStyle = "px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center justify-center gap-2 min-h-[44px]";
+  const interactionStyle = disabled ? "opacity-50 cursor-not-allowed" : "active:scale-95 cursor-pointer";
+  
   const variants = {
     primary: "bg-[#1D1D1F] text-white hover:bg-black shadow-md",
     secondary: "bg-[#E8E8ED] text-[#1D1D1F] hover:bg-[#D2D2D7]",
@@ -19,7 +21,11 @@ export const Button: React.FC<{ children: React.ReactNode; variant?: 'primary' |
   };
 
   return (
-    <button className={`${baseStyle} ${variants[variant]} ${className}`} onClick={onClick}>
+    <button 
+      className={`${baseStyle} ${variants[variant]} ${interactionStyle} ${className}`} 
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+    >
       {children}
     </button>
   );

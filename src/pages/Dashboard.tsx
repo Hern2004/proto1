@@ -1,3 +1,4 @@
+
 declare const process: any;
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Type, Schema } from "@google/genai";
@@ -5,19 +6,22 @@ import { SectionHeading, Button } from '../components/UI';
 import { protocolsData } from '../data/protocols';
 import { ResearchReport } from '../types';
 import { ShieldCheck, AlertCircle, Activity } from 'lucide-react';
+import { translations } from '../i18n';
 
 interface DashboardProps {
   onViewReport: () => void;
   onAnalysisComplete: (data: ResearchReport) => void;
   query: string;
+  lang: 'zh' | 'en';
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onViewReport, onAnalysisComplete, query }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onViewReport, onAnalysisComplete, query, lang }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [currentAction, setCurrentAction] = useState('');
   const hasFetched = useRef(false);
+  const t = translations[lang].dashboard;
 
   // Define the JSON Schema matching V3.0/V7.0 Requirements
   const reportSchema: Schema = {
@@ -394,18 +398,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onViewReport, onAnalysisComplete,
       
       try {
         const steps = [
-          "Step 1: 初始化 Web3 投研元架构 V7.0...",
-          "Step 2: 运行信息采集协议 V4.0 (身份锁定)...",
-          "Step 3: 执行信息验证协议 V6.0 (六层级扫描)...",
-          "Step 4: 白皮书对齐 WAP V3.0 (偏差与承诺核对)...",
-          "Step 5: 技术实现能力评估 Tech V3.0 (代码审计)...",
-          "Step 6: 叙事周期协议 NCP V7.0 (阶段与策略)...",
-          "Step 7: 代币经济解析 TIP V5.0 (需求侧分级)...",
-          "Step 8: 链上行为监控 Monitor V3.0 (资金流向)...",
-          "Step 9: 风险识别协议 Risk V6.0 (五维模型)...",
-          "Step 10: 经济模型压力测试 Stress V3.0 (死亡螺旋)...",
-          "Step 11: 项目评分协议 Score V3.0 (反脆弱计算)...",
-          "Step 12: 最终输出协议 Output V3.0 (生成报告)..."
+          t.steps[1],
+          t.steps[2],
+          t.steps[3],
+          t.steps[4],
+          t.steps[5],
+          t.steps[6],
+          t.steps[7],
+          t.steps[8],
+          t.steps[9],
+          t.steps[10],
+          t.steps[11],
+          t.steps[12]
         ];
 
         let currentStep = 0;
@@ -490,7 +494,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onViewReport, onAnalysisComplete,
           --- OUTPUT REQUIREMENT ---
           Return ONLY raw JSON matching the schema below. 
           STRICTLY JSON. NO MARKDOWN. NO CODE BLOCKS.
-          Language: Chinese (中文).
+          Language: ${lang === 'en' ? 'English' : 'Chinese (中文)'}.
           
           JSON Schema:
           ${JSON.stringify(reportSchema, null, 2)}
@@ -506,7 +510,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onViewReport, onAnalysisComplete,
 
         clearInterval(interval);
         setProgress(100);
-        setCurrentAction("报告生成完毕");
+        setCurrentAction(t.steps.done);
 
         const rawText = response.text || "";
         if (!rawText) throw new Error("AI 未返回数据");
@@ -560,7 +564,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onViewReport, onAnalysisComplete,
     };
 
     runAnalysis();
-  }, [query, onAnalysisComplete]);
+  }, [query, onAnalysisComplete, lang, t]);
 
   if (loading || error) {
     return (
@@ -572,7 +576,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onViewReport, onAnalysisComplete,
                   <AlertCircle className="text-red-500" size={40} />
                 </div>
                 <h2 className="text-2xl font-semibold text-[#1D1D1F]">{error}</h2>
-                <Button onClick={() => window.location.reload()} className="mx-auto">重试</Button>
+                <Button onClick={() => window.location.reload()} className="mx-auto">{t.error_retry}</Button>
              </div>
           ) : (
             <>
@@ -584,7 +588,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onViewReport, onAnalysisComplete,
                 <ShieldCheck className="absolute inset-0 m-auto text-blue-500 animate-pulse" size={32} />
               </div>
               <div className="animate-fade-in">
-                <h2 className="text-2xl font-semibold text-[#1D1D1F] mb-2">正在分析目标: {query}</h2>
+                <h2 className="text-2xl font-semibold text-[#1D1D1F] mb-2">{t.analyzing}: {query}</h2>
                 <p className="text-[#86868B] font-mono text-sm min-h-[24px] flex items-center justify-center gap-2">
                   <Activity size={14} className="animate-pulse"/>
                   {currentAction}
