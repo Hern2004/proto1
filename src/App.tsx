@@ -90,32 +90,7 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3 md:gap-4 text-sm font-medium text-[#1D1D1F]">
-            
-             {/* Main Navigation Links - Clean Text */}
-             <div className="hidden md:flex items-center gap-1 mr-2">
-                <button 
-                    onClick={() => setCurrentView(ViewState.Veo)}
-                    className={`px-4 py-2 rounded-full transition-all text-sm ${currentView === ViewState.Veo ? 'text-black font-semibold bg-black/5' : 'text-[#86868B] hover:text-black hover:bg-black/5'}`}
-                >
-                    {t.nav.veo}
-                </button>
-                <button 
-                    onClick={() => setCurrentView(ViewState.Dashboard)}
-                    className={`px-4 py-2 rounded-full transition-all text-sm ${currentView === ViewState.Dashboard ? 'text-black font-semibold bg-black/5' : 'text-[#86868B] hover:text-black hover:bg-black/5'}`}
-                >
-                    {t.nav.analysis}
-                </button>
-                <button 
-                    onClick={() => setCurrentView(ViewState.Protocols)}
-                    className={`px-4 py-2 rounded-full transition-all text-sm ${currentView === ViewState.Protocols ? 'text-black font-semibold bg-black/5' : 'text-[#86868B] hover:text-black hover:bg-black/5'}`}
-                >
-                    {t.nav.protocols}
-                </button>
-             </div>
-
-             {/* Divider */}
-             <div className="h-4 w-[1px] bg-[#1D1D1F]/10 mx-1 hidden md:block"></div>
-
+             
              {/* Language Switcher - Apple Style Glass */}
              <button 
                 onClick={toggleLanguage}
@@ -139,6 +114,32 @@ const App: React.FC = () => {
                 <Wallet size={15} className="text-white/90"/> 
                 <span className="font-medium tracking-wide text-xs md:text-sm">{t.nav.pricing}</span>
              </button>
+
+             {/* Divider */}
+             <div className="h-4 w-[1px] bg-[#1D1D1F]/10 mx-1 hidden md:block"></div>
+
+             {/* Main Navigation Links - Clean Text */}
+             <div className="hidden md:flex items-center gap-1">
+                <button 
+                    onClick={() => setCurrentView(ViewState.Veo)}
+                    className={`px-4 py-2 rounded-full transition-all text-sm ${currentView === ViewState.Veo ? 'text-black font-semibold bg-black/5' : 'text-[#86868B] hover:text-black hover:bg-black/5'}`}
+                >
+                    {t.nav.veo}
+                </button>
+                <button 
+                    onClick={() => setCurrentView(ViewState.Dashboard)}
+                    className={`px-4 py-2 rounded-full transition-all text-sm ${currentView === ViewState.Dashboard ? 'text-black font-semibold bg-black/5' : 'text-[#86868B] hover:text-black hover:bg-black/5'}`}
+                >
+                    {t.nav.analysis}
+                </button>
+                <button 
+                    onClick={() => setCurrentView(ViewState.Protocols)}
+                    className={`px-4 py-2 rounded-full transition-all text-sm ${currentView === ViewState.Protocols ? 'text-black font-semibold bg-black/5' : 'text-[#86868B] hover:text-black hover:bg-black/5'}`}
+                >
+                    {t.nav.protocols}
+                </button>
+             </div>
+
           </div>
         </div>
       </nav>
